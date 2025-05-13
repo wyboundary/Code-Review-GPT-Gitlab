@@ -76,9 +76,17 @@ MAX_FILES = 50
 
 # ------------- Message notification --------------------
 # dingding notification （un necessary）
+ENABLE_DINGDING = False
 DINGDING_BOT_WEBHOOK = "https://oapi.dingtalk.com/robot/send?access_token=*****************************************"
 DINGDING_SECRET = "S********************************950f"
 
+# email notification
+ENABLE_EMAIL = True
+SMTP_SERVER = ""
+SMTP_PORT = 465
+SMTP_USER = ''
+SMTP_PASSWORD = ''
+SMTP_FROM_ADDR = ''
 
 # ------------- code review settings --------------------
 # expect file types

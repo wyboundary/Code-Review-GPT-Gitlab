@@ -24,4 +24,4 @@ if __name__ == '__main__':
     log.info('Starting args check...')
     check_config()
     log.info('Starting the app...')
-    app.run(debug=True, host="0.0.0.0", port=80, use_reloader=False)
+    app.run(debug=True, host="0.0.0.0", port=5555, use_reloader=False)

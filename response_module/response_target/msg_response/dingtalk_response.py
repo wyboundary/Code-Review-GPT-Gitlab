@@ -19,6 +19,8 @@ class DingtalkResponse(AbstractResponseMessage):
             self.merge_request_id = config['merge_request_iid']
 
     def send(self, message):
+        if not ENABLE_DINGDING:
+            return False
         if self.type == 'merge_request':
             return self.send_dingtalk_message_by_sign(message)
         else:

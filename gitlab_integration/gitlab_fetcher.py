@@ -101,6 +101,115 @@ class GitlabMergeRequestFetcher:
         else:
             return None
 
+class GitlabPushEventFetcher:
+    def __init__(self, project_id, commit_id):
+        self.project_id = project_id
+        self.commit_id = commit_id
+        self._commit_cache = None
+        self._diff_cache = None
+        self._changes_cache = None
+        self._file_content_cache = {}
+        self._info_cache = None
+
+    @retry(stop_max_attempt_number=3, wait_fixed=2000)
+    def get_changes(self, force=False):
+        """
+        获取 push 事件中提交的变更内容
+        :return: 变更内容
+        """
+        if self._changes_cache and not force:
+            return self._changes_cache
+        # 构建 GitLab API 请求的 URL
+        url = f"{GITLAB_SERVER_URL}/api/v4/projects/{self.project_id}/repository/commits/{self.commit_id}/diff"
+        # 请求头，包含私有令牌
+        headers = {
+            "PRIVATE-TOKEN": GITLAB_PRIVATE_TOKEN
+        }
+        # 发送 GET 请求
+        response = requests.get(url, headers=headers)
+        # 检查请求是否成功
+        if response.status_code == 200:
+            self._changes_cache = response.json()
+            return response.json()
+        else:
+            return None
+        
+    @retry(stop_max_attempt_number=3, wait_fixed=2000)
+    # 获取文件内容
+    def get_file_content(self, file_path, branch_name='main', force=False):
+        """
+        Get the content of the file
+        :param file_path: The path of the file
+        :return: The content of the file
+        """
+        # 对file_path中的'/'转换为'%2F'
+        file_path = file_path.replace('/', '%2F')
+        if file_path in self._file_content_cache and not force:
+            return self._file_content_cache[file_path]
+        # URL for the GitLab API endpoint
+        url = f"{GITLAB_SERVER_URL}/api/v4/projects/{self.project_id}/repository/files/{file_path}/raw?ref={branch_name}"
+
+        # Headers for the request
+        headers = {
+            "PRIVATE-TOKEN": GITLAB_PRIVATE_TOKEN
+        }
+
+        # Make the GET request
+        response = requests.get(url, headers=headers)
+
+        # Check if the request was successful
+        if response.status_code == 200:
+            self._file_content_cache[file_path] = response.text
+            return response.text
+        else:
+            return None
+        
+    @retry(stop_max_attempt_number=3, wait_fixed=2000)
+    def get_commit_info(self, force=False):
+        """
+        获取 commit 的基础信息
+        :return: commit 信息（作者、提交时间、标题等）
+        """
+        if self._commit_cache and not force:
+            return self._commit_cache
+
+        url = f"{GITLAB_SERVER_URL}/api/v4/projects/{self.project_id}/repository/commits/{self.commit_id}"
+        headers = {
+            "PRIVATE-TOKEN": GITLAB_PRIVATE_TOKEN
+        }
+
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 200:
+            self._commit_cache = response.json()
+            return self._commit_cache
+        else:
+            log.error(f"获取 commit 信息失败: {response.status_code} {response.text}")
+            return None
+
+    @retry(stop_max_attempt_number=3, wait_fixed=2000)
+    def get_commit_diff(self, force=False):
+        """
+        获取某个 commit 的 diff 文件改动内容
+        :return: diff 列表
+        """
+        if self._diff_cache and not force:
+            return self._diff_cache
+
+        url = f"{GITLAB_SERVER_URL}/api/v4/projects/{self.project_id}/repository/commits/{self.commit_id}/diff"
+        headers = {
+            "PRIVATE-TOKEN": GITLAB_PRIVATE_TOKEN
+        }
+
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 200:
+            self._diff_cache = response.json()
+            return self._diff_cache
+        else:
+            log.error(f"获取 commit diff 失败: {response.status_code} {response.text}")
+            return None
+
 # gitlab仓库clone和管理
 class GitlabRepoManager:
     def __init__(self, project_id, branch_name = ""):

@@ -30,13 +30,16 @@ def check_config():
             results.append(["Gitlab configuration", "Failed",
                             "\n".join(gitlab_check['errors']),
                             "❌ Code review function cannot be used.\n❌ Comment function cannot be used."])
-        dingding_check = check_dingding_config(config)
-        if dingding_check['passed']:
-            results.append(["Dingding configuration", "Passed", "", "✅ Notification on Dingtalk function can be used."])
-        else:
-            results.append(["Dingding configuration", "Failed",
-                            "\n".join(dingding_check['errors']),
-                            "⚠️ Notification on Dingtalk function cannot be used."])
+        
+        if config.ENABLE_DINGDING:
+            dingding_check = check_dingding_config(config)
+            if dingding_check['passed']:
+                results.append(["Dingding configuration", "Passed", "", "✅ Notification on Dingtalk function can be used."])
+            else:
+                results.append(["Dingding configuration", "Failed",
+                                "\n".join(dingding_check['errors']),
+                                "⚠️ Notification on Dingtalk function cannot be used."])
+                
     except ImportError:
         results.append(["Configuration file", "Failed", "config.py not found",
                         "❌ Cannot run any Service, please create a config.py file"])

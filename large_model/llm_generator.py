@@ -10,6 +10,8 @@ class LLMGenerator:
     def new_model(cls, config = api_config):
         api = cls.create_model_instance()
         api.set_config(config)
+        print(api)
+        print(config)
         return api
 
     @classmethod
@@ -17,6 +19,8 @@ class LLMGenerator:
         module_name, class_name = llm_api_impl.rsplit('.', 1)
         module = importlib.import_module(module_name)
         llm_class = getattr(module, class_name)
+        print(module_name,module)
+        print(llm_class)
         return llm_class
 
     @classmethod

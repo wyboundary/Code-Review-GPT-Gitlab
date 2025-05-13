@@ -26,3 +26,18 @@ class ReviewEngine:
         gitlabRepoManager.delete_repo()
         self.reply.send()
         self.reply.send_comments()
+
+    def handle_push(self, gitlabPushEventFetcher, gitlabRepoManager, webhook_info):
+        """
+        处理 Push 事件
+        """
+        # 多线程处理
+        threads = [threading.Thread(target=handle.push_handle,
+                                    args=(gitlabPushEventFetcher, gitlabRepoManager,webhook_info, self.reply, LLMGenerator.new_model())) 
+                for handle in self.handles]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+
+        self.reply.send()

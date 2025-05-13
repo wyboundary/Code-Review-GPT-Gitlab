@@ -1,6 +1,7 @@
 from response_module.abstract_response import AbstractResponse, AbstractResponseMessage
 from response_module.response_target.msg_response.dingtalk_response import DingtalkResponse
 from response_module.response_target.msg_response.gitlab_response import GitlabResponse
+from response_module.response_target.msg_response.email_response import EmailResponse
 
 
 class ResponseFactory:
@@ -44,7 +45,7 @@ class ResponseFactory:
     def get_all_other_targets(cls):
         return list(cls._registry_other.keys())
 
-
+ResponseFactory.register_target('email', EmailResponse)
 ResponseFactory.register_target('gitlab', GitlabResponse)
 ResponseFactory.register_target('dingtalk', DingtalkResponse)
 # ResponseFactory.register_target('temp', TemplateResponse)

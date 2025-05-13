@@ -21,7 +21,8 @@ class DefaultApi(AbstractApi):
                 os.environ[key] = api_config[key]
                 continue
             self.params[key] = api_config[key]
-            
+        print(f"API请求参数: {self.params}")  # 调试信息
+  
         return True
 
     def generate_text(self, messages: list) -> bool:

@@ -37,7 +37,7 @@ def chat_review(changes, generate_review, *args, **kwargs):
 
     # 合并结果
 
-    return "<details open><summary><h1>修改文件列表</h1></summary>" + "\n\n".join(review_results) +"</details>" if review_results else ""
+    return "## 修改文件列表 " + "\n\n".join(review_results) if review_results else ""
 
 
 def chat_review_summary(changes, model):
@@ -180,8 +180,13 @@ def generate_diff_summary(file=None, diff=None, model=None, messages=None):
 @retry(stop_max_attempt_number=3, wait_fixed=60000)
 def generate_review_note_with_context(change, model, gitlab_fetcher, merge_info):
     try:
+        
+        # log.info(f"发送给 LLM 内容如下 change: {change}")
+        # log.info(f"发送给 LLM 内容如下 merge_info: {merge_info}")
+
         # prepare
-        source_code = gitlab_fetcher.get_file_content(change['new_path'], merge_info['source_branch'])
+        source_code = gitlab_fetcher.get_file_content(change['new_path'], merge_info['ref'])
+        # log.info(f"33333发送给 LLM 内容如下：{source_code}")
         new_path = change['new_path']
         content = add_context_to_diff(change['diff'], source_code)
         messages = [
@@ -303,4 +308,91 @@ class MainReviewHandle(ReviewHandle):
             log.error(f"获取merge_request信息失败，project_id: {hook_info['project']['id']} |"
                       f" merge_iid: {hook_info['object_attributes']['iid']} | merge_info: {merge_info}")
 
+    def push_handle(self, gitlabPushEventFetcher, gitlabRepoManager, hook_info, reply, model):
+        changes = gitlabPushEventFetcher.get_changes()
+        log.info(f"获取到的push代码改变信息:{changes}\n")
+        # 处理 push 事件
+        if changes and len(changes) <= MAX_FILES:
+            review_summary = chat_review_summary(changes, model)
+            review_info = chat_review(changes, generate_review_note_with_context, model, gitlabPushEventFetcher, hook_info)
+            review_info = review_summary + review_info
+            
+            log.info(f"获取到的review信息：{review_info}\n")
+           
+            body = review_info
+
+            # 获取第一个提交的信息
+            commit_info = hook_info['commits'][0]
+            if review_info:
+                reply.add_reply({
+                    'content': review_info,
+                    'msg_type': 'SINGLE',
+                    'target': 'email',
+                })
+                # reply.add_reply({
+                #     'title': '__PUSH_REVIEW__',
+                #     'content': (
+                #         f"## 项目名称: **{hook_info['project']['name']}**\n\n"
+                #         f"### Push 详情\n"
+                #         f"- **Push URL**: [查看 Push 详情]({commit_info['url']})\n"
+                #         f"### 变更详情\n"
+                #         f"- **修改文件个数**: `{len(changes)}`\n"
+                #         f"- **Code Review 状态**: ✅\n"
+                #     ),
+                #     'target': 'dingtalk',
+                #     'msg_type': 'SINGLE',
+                # })
+            else:
+                reply.add_reply({
+                    'title': '__PUSH_REVIEW__',
+                    'content': (
+                        f"## 项目名称: **{hook_info['project']['name']}**\n\n"
+                        f"### Push 详情\n"
+                        f"- **Push URL**: [查看 Push 详情]({commit_info['url']})\n"
+                        f"### 变更详情\n"
+                        f"- **修改文件个数**: `{len(changes)}`\n"
+                        f"- **备注**: 所有文件已进行推送，正在进行 Push 审查\n"
+                        f"- **Code Review 状态**: pass ✅\n"
+                    ),
+                    'target': 'dingtalk',
+                    'msg_type': 'PUSH, SINGLE',
+                })
+
+        elif changes and len(changes) > MAX_FILES:
+            # reply.add_reply({
+            #     'title': '__PUSH_REVIEW__',
+            #     'content': (
+            #         f"## 项目名称: **{hook_info['project']['name']}**\n\n"
+            #         f"### 备注\n"
+            #         f"修改 `{len(changes)}` 个文件 > 50 个文件，不进行 Code Review ⚠️\n\n"
+            #         f"### Push 详情\n"
+            #         f"- **Push URL**: [查看 Push 详情]({commit_info['url']})\n"
+            #     ),
+            #     'target': 'dingtalk',
+            #     'msg_type': 'PUSH, SINGLE',
+            # })
+            body = (
+                    f"## 项目名称: **{hook_info['project']['name']}**\n\n"
+                    f"### 备注\n"
+                    f"修改 `{len(changes)}` 个文件 > 50 个文件，不进行 Code Review ⚠️\n\n"
+                    f"### Push 详情\n"
+                    f"- **Push URL**: [查看 Push 详情]({commit_info['url']})\n"
+                )
+            reply.add_reply({
+                    'content': body,
+                    'msg_type': 'SINGLE',
+                    'target': 'email',
+                })
+
+        else:
+
+            errorMsg = (f"获取push信息失败，project_id: {hook_info['project']['id']} |"
+                    f" push_id: {commit_info['id']} | push_info: {hook_info}")
+            
+            log.error(errorMsg)
+            reply.add_reply({
+                    'content': errorMsg,
+                    'msg_type': 'SINGLE',
+                    'target': 'email',
+                })
 
