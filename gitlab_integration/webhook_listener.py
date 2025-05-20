@@ -40,7 +40,11 @@ class WebhookListener:
                 log.warning("未找到 commit 列表，忽略本次 push")
                 return jsonify({'status': 'no commits'}), 200
             toEmail = gitlab_payload.get('commits')[0].get('author').get('email')
+            
+            if toEmail and isinstance(toEmail, str) and toEmail not in TO_EMAIL_ADDR:
+                TO_EMAIL_ADDR.append(toEmail)
             log.info(f"🚀 本次push的作者邮箱: {toEmail}\n")
+            
             config = {
                 'type': 'push',
                 'project_id': gitlab_payload.get('project')['id'],
@@ -49,7 +53,7 @@ class WebhookListener:
                 'smtp_user': SMTP_USER,
                 'smtp_password': SMTP_PASSWORD,
                 'from_addr': SMTP_FROM_ADDR,
-                'to_addrs': toEmail
+                'to_addrs': TO_EMAIL_ADDR
             }
             reply = ReviewResponse(config)
 
@@ -93,7 +97,7 @@ class WebhookListener:
 
             for commit in commits:
                 commit_id = commit.get('id')
-                log.info(f"处理gitlab提交的commit_id: {commit_id}")
+                log.info(f"本次gitlab提交的commit_id: {commit_id}\n")
 
                 # 为每个 commit 启动一个线程
                 review_engine = ReviewEngine(reply)

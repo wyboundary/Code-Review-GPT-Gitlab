@@ -37,12 +37,13 @@ class EmailResponse(AbstractResponseMessage):
         if self.type != 'push':
             return False
         
-        log.info(f"发送email: {message}")
+        # log.info(f"发送email: {message}")
         if isinstance(self.to_addrs, str):
             to_addrs = [addr.strip() for addr in self.to_addrs.split(',')]
         else:
             to_addrs = self.to_addrs
-
+        log.info(f"[EmailResponse] 收件人: {to_addrs}")
+        log.info(f"[EmailResponse] 发件人: {self.from_addr}")
         try:
             cleaned_md = self.clean_markdown_headings(message)
             print(f"[EmailResponse] Cleaned Markdown: {cleaned_md}")

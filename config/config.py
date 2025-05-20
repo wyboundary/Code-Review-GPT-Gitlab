@@ -87,6 +87,7 @@ SMTP_PORT = 465
 SMTP_USER = ''
 SMTP_PASSWORD = ''
 SMTP_FROM_ADDR = ''
+TO_EMAIL_ADDR = [""]
 
 # ------------- code review settings --------------------
 # expect file types

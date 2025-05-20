@@ -1,4 +1,5 @@
 from math import trunc
+from utils.logger import log
 import os
 import requests,json
 from large_model.abstract_api import AbstractApi
@@ -31,7 +32,7 @@ class ThirdCustomApi(AbstractApi):
                 os.environ[key] = api_config[key]
                 continue
             self.params[key] = api_config[key]
-        print(f"API请求参数: {self.params}")  # 调试信息
+        # log.info(f"ThirdCustomApi API请求参数: \n{self.params}\n")  
   
         return True
 
@@ -53,8 +54,9 @@ class ThirdCustomApi(AbstractApi):
         })
 
         try:
+            log.info(f"ThirdCustomApi 请求数据 Response:\n {payload}\n")
             self.response = requests.request("POST",  url, headers=headers, data=payload).json()
-            print("响应数据 Response:", self.response)
+            log.info(f"ThirdCustomApi 响应数据 Response:\n {self.response}\n")
         except Exception as e:
             raise e
         return True

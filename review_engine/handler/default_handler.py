@@ -41,7 +41,7 @@ def chat_review(changes, generate_review, *args, **kwargs):
 
 
 def chat_review_summary(changes, model):
-    log.info("开始 code review summary")
+    log.info(f"开始 code review summary\n")
     file_diff_map = {}
     file_summary_map = {}
     summary_lock = threading.Lock()
@@ -65,7 +65,7 @@ def chat_review_summary(changes, model):
         # 等待所有任务完成
         concurrent.futures.wait(futures)
 
-    log.info("code diff review完成，batch summary中")
+    log.info(f"code diff review完成，batch summary中\n")
     summaries_content = ""
     batchsize = 8
     # 分批对单文件summary 进行汇总
@@ -98,12 +98,12 @@ def chat_review_summary(changes, model):
          }
     ]
     summary_result = generate_diff_summary(model=model, messages=final_summary_msg)
-    log.info("code diff review summary完成")
+    log.info(f"code diff review summary完成\n")
     return summary_result+"\n\n---\n\n" if summary_result else ""
 
 def chat_review_inline_comment(changes, model, merge_info):
     """行内comment"""
-    log.info("开始code review inline comment")
+    log.info(f"开始code review inline comment\n")
     comment_results = []
     comment_lock = threading.Lock()
     diff_refs = merge_info['diff_refs']
@@ -215,7 +215,7 @@ def generate_review_note_with_context(change, model, gitlab_fetcher, merge_info)
         # review_note += f'({total_tokens} tokens) {"AI review 意见如下:"}' + '\n\n'
         # review_note += response_content + "\n\n---\n\n---\n\n"
         
-        log.info(f'对 {new_path} review结束')
+        log.info(f'对 {new_path} review结束\n')
         return review_note
     
     except Exception as e:
@@ -310,14 +310,14 @@ class MainReviewHandle(ReviewHandle):
 
     def push_handle(self, gitlabPushEventFetcher, gitlabRepoManager, hook_info, reply, model):
         changes = gitlabPushEventFetcher.get_changes()
-        log.info(f"获取到的push代码改变信息:{changes}\n")
+        log.info(f"获取到的push代码改变信息:\n{changes}\n")
         # 处理 push 事件
         if changes and len(changes) <= MAX_FILES:
             review_summary = chat_review_summary(changes, model)
             review_info = chat_review(changes, generate_review_note_with_context, model, gitlabPushEventFetcher, hook_info)
             review_info = review_summary + review_info
             
-            log.info(f"获取到的review信息：{review_info}\n")
+            log.info(f"review信息：\n{review_info}\n")
            
             body = review_info
 
