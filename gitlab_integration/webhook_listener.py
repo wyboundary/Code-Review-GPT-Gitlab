@@ -41,8 +41,9 @@ class WebhookListener:
                 return jsonify({'status': 'no commits'}), 200
             toEmail = gitlab_payload.get('commits')[0].get('author').get('email')
             
-            if toEmail and isinstance(toEmail, str) and toEmail not in TO_EMAIL_ADDR:
-                TO_EMAIL_ADDR.append(toEmail)
+            email_list = list(TO_EMAIL_ADDR)
+            if toEmail and isinstance(toEmail, str) and toEmail not in email_list:
+                email_list.append(toEmail)
             log.info(f"🚀 本次push的作者邮箱: {toEmail}\n")
             
             config = {
@@ -53,7 +54,7 @@ class WebhookListener:
                 'smtp_user': SMTP_USER,
                 'smtp_password': SMTP_PASSWORD,
                 'from_addr': SMTP_FROM_ADDR,
-                'to_addrs': TO_EMAIL_ADDR
+                'to_addrs': email_list
             }
             reply = ReviewResponse(config)
 
