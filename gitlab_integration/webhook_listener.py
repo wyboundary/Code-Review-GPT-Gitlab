@@ -41,11 +41,20 @@ class WebhookListener:
                 return jsonify({'status': 'no commits'}), 200
             toEmail = gitlab_payload.get('commits')[0].get('author').get('email')
             
-            email_list = list(TO_EMAIL_ADDR)
-            if toEmail and isinstance(toEmail, str) and toEmail not in email_list:
-                email_list.append(toEmail)
+            # 用 set 保证不重复
+            email_set = set(TO_EMAIL_ADDR)
+
+            # 如果 toEmail 不为空且不在集合中，则添加
+            if toEmail and isinstance(toEmail, str):
+                email_set.add(toEmail)
+
+            # 转回 list 以便后续使用
+            email_list = list(email_set)
+
+            # 输出日志
             log.info(f"🚀 本次push的作者邮箱: {toEmail}\n")
-            
+            log.info(f"🚀 本次push的作者邮箱列表: {email_list}\n")
+
             config = {
                 'type': 'push',
                 'project_id': gitlab_payload.get('project')['id'],

@@ -1,6 +1,7 @@
 # api 接口封装类
 
-llm_api_impl = "large_model.api.default_api.DefaultApi"
+# llm_api_impl = "large_model.api.default_api.DefaultApi"
+llm_api_impl = "large_model.api.third_custom_api.ThirdCustomApi"
 
 # DeepSeek配置示例
 # api 配置方式参考 docs/config.md
@@ -38,14 +39,11 @@ api_config = {
 
 # Prompt
 GPT_MESSAGE = """
-         你是一位资深编程专家，gitlab的分支代码变更将以git diff 字符串的形式提供，请你帮忙review本段代码。然后你review内容的返回内容必须严格遵守下面的格式，包括标题内容。模板中的变量内容解释：
+         你是一位资深iOS编程专家，gitlab的分支代码变更将以git diff 字符串的形式提供，请你帮忙review本段iOS项目的代码。然后你review内容的返回内容必须严格遵守下面的格式，包括标题内容。模板中的变量内容解释：
          变量5为: 代码中的优点。变量1:给review打分，分数区间为0~100分。变量2：code review发现的问题点。变量3：具体的修改建议。变量4：是你给出的修改后的代码。
          必须要求：1. 以精炼的语言、严厉的语气指出存在的问题。2. 你的反馈内容必须使用严谨的markdown格式 3. 不要携带变量内容解释信息。4. 有清晰的标题结构。有清晰的标题结构。有清晰的标题结构。
 返回格式严格如下：
-
-
-
-### 😀代码评分：{变量1}
+#### 😀代码评分：{变量1}
 
 #### ✅代码优点：
 {变量5}
@@ -65,10 +63,10 @@ GPT_MESSAGE = """
 
 # ------------------Gitlab info--------------------------
 # Gitlab url
-GITLAB_SERVER_URL = "https://gitlab.com"
+GITLAB_SERVER_URL = ""
 
 # Gitlab private token
-GITLAB_PRIVATE_TOKEN = "gitlab private token"
+GITLAB_PRIVATE_TOKEN = ""
 
 # Gitlab modifies the maximum number of files
 MAX_FILES = 50
@@ -77,13 +75,14 @@ MAX_FILES = 50
 # ------------- Message notification --------------------
 # dingding notification （un necessary）
 ENABLE_DINGDING = False
-DINGDING_BOT_WEBHOOK = "https://oapi.dingtalk.com/robot/send?access_token=*****************************************"
-DINGDING_SECRET = "S********************************950f"
+DINGDING_BOT_WEBHOOK = ""
+DINGDING_SECRET = ""
+
 
 # email notification
 ENABLE_EMAIL = True
 SMTP_SERVER = ""
-SMTP_PORT = 465
+SMTP_PORT = 888
 SMTP_USER = ''
 SMTP_PASSWORD = ''
 SMTP_FROM_ADDR = ''
@@ -91,7 +90,7 @@ TO_EMAIL_ADDR = [""]
 
 # ------------- code review settings --------------------
 # expect file types
-EXCLUDE_FILE_TYPES = ['.py', '.java', '.class', '.vue', ".go",".c",".cpp"]
+EXCLUDE_FILE_TYPES = [".swift",".m",".h",'.py', '.class', ".c",".cpp"]
 
 # ignore file types
 IGNORE_FILE_TYPES = ["mod.go"]
